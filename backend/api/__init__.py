@@ -14,6 +14,10 @@ def register_api_routes(app):
     from .telemetry import telemetry_bp
     from .missions import missions_bp
     from .video import video_bp
+    from .ui import ui_bp
+    
+    # Register UI routes directly to app (not under /api)
+    app.register_blueprint(ui_bp)
     
     # Create main API blueprint
     main_api_bp = Blueprint('api', __name__, url_prefix='/api')
