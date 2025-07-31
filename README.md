@@ -869,10 +869,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Muhammad Umair Hakeem**  
 BS Computer Science, NUML Islamabad  
-🌐 Portfolio: [memyport.netlify.app](https://umairhakeem.netlify.app)  
+🌐 Portfolio: [umairhakeem.netlify.app](https://umairhakeem.netlify.app)  
 📧 Email: iamumair1124@gmail.com  
 🐙 GitHub: [@Umairism](https://github.com/umairism)  
-💼 LinkedIn: [muhammad-umair-hakeem](https://linkedin.com/in/umairism)  
+💼 LinkedIn: [Muhammad Umair Hakeem](https://linkedin.com/in/umairism)  
 
 ---
 

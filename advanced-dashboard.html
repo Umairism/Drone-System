@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveillance Drone - Advanced Dashboard</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .achievement-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff6b35;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page-section {
+            display: none;
+            width: 100%;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        .full-width-section {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+
+        /* Ensure dashboard container takes full space for all pages */
+        .dashboard-container .page-section {
+            grid-column: 1 / -1;
+        }
+
+        .dashboard-container .page-section.active#dashboardPage {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .status-value {
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .control-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .control-btn:disabled {
+            background: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.emergency {
+            background: linear-gradient(135deg, #ff4757, #c44569);
+        }
+
+        .control-btn.emergency:hover {
+            box-shadow: 0 5px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .achievements-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .achievement-icon {
+            font-size: 1.5rem;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .achievement-desc {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .achievement-points {
+            background: #00d4ff;
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .level-progress {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 20px;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .level-bar {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            height: 100%;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .level-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .logs-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem;
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.info {
+            border-left-color: #00d4ff;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffa500;
+        }
+
+        .log-entry.error {
+            border-left-color: #ff4757;
+        }
+
+        .log-timestamp {
+            color: #888;
+            margin-right: 0.5rem;
+        }
+
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .celebration-modal {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            position: relative;
+            animation: celebrationBounce 0.8s ease;
+        }
+
+        .celebration-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotate 2s infinite linear;
+        }
+
+        .celebration-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #000;
+        }
+
+        .celebration-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #000;
+            opacity: 0.8;
+        }
+
+        .celebration-close {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .mobile-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 212, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes celebrationBounce {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .maps-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .maps-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .drone-marker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        .mission-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .mission-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .mission-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .mission-status.active { background: #00ff88; color: #000; }
+        .mission-status.completed { background: #00d4ff; color: #000; }
+        .mission-status.pending { background: #ffa500; color: #000; }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .achievement-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .achievement-card.earned {
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .achievement-card.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .tier-bronze { border-left: 4px solid #cd7f32; }
+        .tier-silver { border-left: 4px solid #c0c0c0; }
+        .tier-gold { border-left: 4px solid #ffd700; }
+        .tier-platinum { border-left: 4px solid #e5e4e2; }
+        .tier-legendary { border-left: 4px solid #ff6b35; }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-section {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-brand">🛰️ Surveillance Drone System</div>
+        <div class="navbar-nav">
+            <a href="#" class="nav-link active" data-section="dashboard">Dashboard</a>
+            <a href="#" class="nav-link" data-section="missions">Missions</a>
+            <a href="#" class="nav-link" data-section="achievements">Achievements
+                <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
+            </a>
+            <a href="#" class="nav-link" data-section="logs">Logs</a>
+            <a href="#" class="nav-link" data-section="mobile">Mobile</a>
+        </div>
+    </nav>
+
+    <!-- Mobile Indicator -->
+    <div class="mobile-indicator" id="mobileIndicator">
+        📱 Mobile Compatible
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        <!-- Dashboard Page (Default) -->
+        <div class="page-section active" id="dashboardPage">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <!-- User Progress -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">👤 Pilot Progress</h3>
+                    </div>
+                    <div id="userProgress">
+                        <div class="level-progress">
+                            <div class="level-bar" id="levelBar" style="width: 0%"></div>
+                            <div class="level-text" id="levelText">Level 1</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                            <span>🏆 <span id="totalPoints">0</span> Points</span>
+                            <span>🎖️ <span id="achievementsCount">0</span> Achievements</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Achievements -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🏆 Recent Achievements</h3>
+                    </div>
+                    <div class="achievements-list" id="recentAchievements">
+                        <div style="text-align: center; opacity: 0.5; padding: 2rem;">
+                            Complete your first flight to unlock achievements!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Drone Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🛰️ Drone Status</h3>
+                        <div id="connectionStatus" style="color: #00d4ff;">Connecting...</div>
+                    </div>
+                    
+                    <!-- Test Button for Debugging -->
+                    <div style="margin: 1rem; padding: 1rem; background: rgba(46, 213, 115, 0.1); border-radius: 8px; border: 1px solid rgba(46, 213, 115, 0.3);">
+                        <button onclick="testSystem()" style="background: #2ed573; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                            🧪 Test System
+                        </button>
+                        <span id="test-result" style="margin-left: 1rem; font-weight: bold;"></span>
+                    </div>
+                    
+                    <div class="status-grid" id="droneStatus">
+                        <div class="status-item">
+                            <span class="status-icon">🔋</span>
+                            <span class="status-label">Battery</span>
+                            <span class="status-value" id="batteryLevel">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">📡</span>
+                            <span class="status-label">Signal</span>
+                            <span class="status-value" id="signalStrength">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">📏</span>
+                            <span class="status-label">Altitude</span>
+                            <span class="status-value" id="altitude">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">💨</span>
+                            <span class="status-label">Speed</span>
+                            <span class="status-value" id="speed">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">🧭</span>
+                            <span class="status-label">Heading</span>
+                            <span class="status-value" id="heading">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">✈️</span>
+                            <span class="status-label">Status</span>
+                            <span class="status-value" id="flightStatus">Disarmed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Panel -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎮 Flight Controls</h3>
+                    </div>
+                    <div class="controls-section">
+                        <button class="control-btn" id="armBtn">ARM</button>
+                        <button class="control-btn" id="takeoffBtn" disabled>TAKEOFF</button>
+                        <button class="control-btn" id="landBtn" disabled>LAND</button>
+                        <button class="control-btn emergency" id="emergencyBtn">EMERGENCY</button>
+                    </div>
+                </div>
+
+                <!-- GPS Location -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🌍 GPS Location</h3>
+                        <button class="control-btn" onclick="updateLocation()">📍 Update</button>
+                    </div>
+                    <div class="maps-container" id="mapsContainer">
+                        <div id="map" style="width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: #888;">
+                            🗺️ GPS location will appear here when available
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                        <span>📍 Lat: <span id="currentLat">--</span></span>
+                        <span>📍 Lng: <span id="currentLng">--</span></span>
+                        <span>📏 Alt: <span id="currentAlt">--</span>m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar">
+                <!-- System Logs -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 System Logs</h3>
+                        <select id="logFilter" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 0.25rem;">
+                            <option value="">All</option>
+                            <option value="flight">Flight</option>
+                            <option value="mission">Mission</option>
+                            <option value="error">Error</option>
+                            <option value="system">System</option>
+                        </select>
+                    </div>
+                    <div class="logs-container" id="systemLogs">
+                        <div class="log-entry info">
+                            <span class="log-timestamp">--:--:--</span>
+                            System initializing...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telemetry -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 Telemetry</h3>
+                    </div>
+                    <div id="telemetryData">
+                        <div class="status-item">
+                            <span class="status-icon">🌡️</span>
+                            <span class="status-label">Temperature</span>
+                            <span class="status-value" id="temperature">--°C</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">🌊</span>
+                            <span class="status-label">Pressure</span>
+                            <span class="status-value" id="pressure">-- hPa</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">💧</span>
+                            <span class="status-label">Humidity</span>
+                            <span class="status-value" id="humidity">--%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">🛰️</span>
+                            <span class="status-label">GPS Sats</span>
+                            <span class="status-value" id="gpsSats">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Missions Page -->
+        <div class="page-section" id="missionsPage">
+            <div class="full-width-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Mission Control Center</h3>
+                        <button class="control-btn" onclick="createNewMission()">➕ New Mission</button>
+                    </div>
+                    <div class="mission-timeline" id="missionTimeline">
+                        <div style="text-align: center; opacity: 0.5; padding: 3rem;">
+                            No missions available. Create your first mission!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements Page -->
+        <div class="page-section" id="achievementsPage">
+            <div class="full-width-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🏆 Achievement Gallery</h3>
+                        <div>
+                            <select id="achievementFilter" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 0.5rem; margin-right: 1rem;">
+                                <option value="">All Categories</option>
+                                <option value="flight">Flight</option>
+                                <option value="mission">Mission</option>
+                                <option value="detection">Detection</option>
+                                <option value="safety">Safety</option>
+                                <option value="performance">Performance</option>
+                            </select>
+                            <select id="tierFilter" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 0.5rem;">
+                                <option value="">All Tiers</option>
+                                <option value="bronze">Bronze</option>
+                                <option value="silver">Silver</option>
+                                <option value="gold">Gold</option>
+                                <option value="platinum">Platinum</option>
+                                <option value="legendary">Legendary</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="achievement-grid" id="achievementGrid">
+                        <div style="text-align: center; opacity: 0.5; padding: 3rem; grid-column: 1 / -1;">
+                            Loading achievements...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div class="page-section" id="logsPage">
+            <div class="full-width-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 System Logs</h3>
+                        <div>
+                            <select id="detailedLogFilter" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 0.5rem; margin-right: 1rem;">
+                                <option value="">All Types</option>
+                                <option value="system">System</option>
+                                <option value="flight">Flight</option>
+                                <option value="mission">Mission</option>
+                                <option value="error">Error</option>
+                                <option value="security">Security</option>
+                                <option value="performance">Performance</option>
+                                <option value="api">API</option>
+                                <option value="telemetry">Telemetry</option>
+                                <option value="video">Video</option>
+                                <option value="gps">GPS</option>
+                                <option value="detection">Detection</option>
+                                <option value="user">User</option>
+                            </select>
+                            <button class="control-btn" onclick="exportLogs()">📥 Export</button>
+                            <button class="control-btn" onclick="clearLogs()">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    <div class="logs-container" id="detailedLogs" style="height: 600px;">
+                        <div style="text-align: center; opacity: 0.5; padding: 3rem;">
+                            Loading system logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Page -->
+        <div class="page-section" id="mobilePage">
+            <div class="full-width-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📱 Mobile App Management</h3>
+                        <div id="mobileConnectionStatus">📱 Checking mobile compatibility...</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">📊 Mobile Status</h4>
+                            <div id="mobileStatusData">
+                                <div style="text-align: center; opacity: 0.5; padding: 2rem;">
+                                    Loading mobile status...
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">🔧 Mobile Configuration</h4>
+                            <div id="mobileConfig">
+                                <div class="status-item">
+                                    <span class="status-label">Push Notifications</span>
+                                    <button class="control-btn" onclick="toggleNotifications()">Enable</button>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Offline Mode</span>
+                                    <button class="control-btn" onclick="toggleOfflineMode()">Configure</button>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Mobile Layout</span>
+                                    <button class="control-btn" onclick="optimizeForMobile()">Optimize</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="celebration-overlay" id="celebrationOverlay">
+        <div class="celebration-modal">
+            <div class="celebration-icon" id="celebrationIcon">🏆</div>
+            <div class="celebration-title" id="celebrationTitle">Achievement Unlocked!</div>
+            <div class="celebration-description" id="celebrationDescription">You've earned a new achievement!</div>
+            <button class="celebration-close" onclick="closeCelebration()">Awesome!</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let socket;
+        let currentUser = 'pilot_001';
+        let mobileSession = null;
+        let achievements = [];
+        let userStats = {
+            flights_completed: 0,
+            missions_completed: 0,
+            objects_detected: 0,
+            total_flight_time: 0
+        };
+
+        // Test function to verify system functionality
+        function testSystem() {
+            const testResult = document.getElementById('test-result');
+            testResult.innerHTML = '🔄 Testing...';
+            testResult.style.color = '#00d4ff';
+            
+            // Test 1: Navigation functionality
+            console.log('🧪 Testing navigation system...');
+            const pages = ['dashboard', 'missions', 'achievements', 'logs', 'mobile'];
+            let navTest = true;
+            
+            pages.forEach(page => {
+                const pageElement = document.getElementById(`${page}-page`);
+                if (!pageElement) {
+                    console.error(`❌ Page element not found: ${page}-page`);
+                    navTest = false;
+                }
+            });
+            
+            // Test 2: Button functionality  
+            console.log('🧪 Testing button elements...');
+            const buttons = ['arm-btn', 'takeoff-btn', 'land-btn', 'emergency-btn'];
+            let buttonTest = true;
+            
+            buttons.forEach(btnId => {
+                const button = document.getElementById(btnId);
+                if (!button) {
+                    console.error(`❌ Button not found: ${btnId}`);
+                    buttonTest = false;
+                }
+            });
+            
+            // Test 3: API connectivity (simple ping)
+            console.log('🧪 Testing API connectivity...');
+            fetch('/api/drone/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ API test successful:', data);
+                    updateTestResult(navTest, buttonTest, true);
+                })
+                .catch(error => {
+                    console.error('❌ API test failed:', error);
+                    updateTestResult(navTest, buttonTest, false);
+                });
+        }
+        
+        function updateTestResult(navTest, buttonTest, apiTest) {
+            const testResult = document.getElementById('test-result');
+            const results = [];
+            
+            if (navTest) results.push('✅ Navigation');
+            else results.push('❌ Navigation');
+            
+            if (buttonTest) results.push('✅ Buttons');
+            else results.push('❌ Buttons');
+            
+            if (apiTest) results.push('✅ API');
+            else results.push('❌ API');
+            
+            const allPassed = navTest && buttonTest && apiTest;
+            testResult.innerHTML = results.join(' | ');
+            testResult.style.color = allPassed ? '#2ed573' : '#ff4757';
+            
+            if (allPassed) {
+                console.log('🎉 All systems operational!');
+            } else {
+                console.log('⚠️ Some systems need attention');
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚁 Advanced Dashboard Initializing...');
+            
+            initializeSocket();
+            initializeMobileSession();
+            loadAchievements();
+            loadUserProgress();
+            startDataUpdates();
+            setupEventListeners();
+            
+            console.log('✅ Advanced Dashboard Initialized');
+            
+            // Test navigation elements
+            const navLinks = document.querySelectorAll('.nav-link');
+            console.log('Found navigation links:', navLinks.length);
+            
+            const controlButtons = document.querySelectorAll('.control-btn');
+            console.log('Found control buttons:', controlButtons.length);
+        });
+
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', function() {
+                console.log('Connected to server');
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').style.color = '#00ff88';
+                logMessage('info', 'Connected to drone system');
+            });
+
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').style.color = '#ff4757';
+                logMessage('error', 'Disconnected from drone system');
+            });
+
+            socket.on('telemetry_update', function(data) {
+                updateTelemetryDisplay(data);
+            });
+
+            socket.on('drone_status_update', function(data) {
+                updateDroneStatus(data);
+            });
+
+            socket.on('mission_update', function(data) {
+                updateMissionStatus(data);
+            });
+
+            socket.on('achievement_unlocked', function(data) {
+                showCelebration(data);
+            });
+        }
+
+        function initializeMobileSession() {
+            // Detect if mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                document.getElementById('mobileIndicator').style.display = 'block';
+                
+                // Register mobile session
+                fetch('/api/mobile/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser,
+                        device_info: {
+                            device_type: /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios' : 'android',
+                            device_id: 'web_' + Date.now(),
+                            app_version: '1.0.0',
+                            settings: {}
+                        }
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mobileSession = data.session_id;
+                        logMessage('info', 'Mobile session registered');
+                    }
+                });
+            }
+        }
+
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/celebrations/achievements');
+                const data = await response.json();
+                
+                if (data.success) {
+                    achievements = data.achievements;
+                    updateAchievementsDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading achievements:', error);
+            }
+        }
+
+        async function loadUserProgress() {
+            try {
+                const response = await fetch(`/api/celebrations/user/${currentUser}/progress`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const dashboard = data.dashboard;
+                    updateUserProgressDisplay(dashboard);
+                    
+                    // Check for pending celebrations
+                    if (dashboard.pending_celebrations && dashboard.pending_celebrations.length > 0) {
+                        dashboard.pending_celebrations.forEach(celebration => {
+                            showCelebration(celebration);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user progress:', error);
+            }
+        }
+
+        function updateUserProgressDisplay(dashboard) {
+            const levelBar = document.getElementById('levelBar');
+            const levelText = document.getElementById('levelText');
+            const totalPoints = document.getElementById('totalPoints');
+            const achievementsCount = document.getElementById('achievementsCount');
+
+            levelText.textContent = `Level ${dashboard.level}`;
+            totalPoints.textContent = dashboard.total_points || 0;
+            achievementsCount.textContent = dashboard.achievements_earned || 0;
+            
+            const progress = dashboard.level_progress || 0;
+            levelBar.style.width = (progress * 100) + '%';
+        }
+
+        function updateAchievementsDisplay() {
+            const container = document.getElementById('recentAchievements');
+            
+            if (achievements.length === 0) {
+                container.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 2rem;">No achievements yet</div>';
+                return;
+            }
+
+            container.innerHTML = achievements.slice(0, 5).map(achievement => `
+                <div class="achievement-item">
+                    <span class="achievement-icon">${achievement.icon}</span>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-desc">${achievement.description}</div>
+                    </div>
+                    <span class="achievement-points">${achievement.reward_points}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateDroneStatus(data) {
+            document.getElementById('batteryLevel').textContent = `${data.battery_level || 0}%`;
+            document.getElementById('signalStrength').textContent = `${data.signals?.controller || 0}%`;
+            document.getElementById('altitude').textContent = `${data.altitude || 0}m`;
+            document.getElementById('speed').textContent = `${data.speed || 0} m/s`;
+            document.getElementById('heading').textContent = `${data.heading || 0}°`;
+            document.getElementById('flightStatus').textContent = data.armed ? (data.flying ? 'Flying' : 'Armed') : 'Disarmed';
+
+            // Update button states
+            const armBtn = document.getElementById('armBtn');
+            const takeoffBtn = document.getElementById('takeoffBtn');
+            const landBtn = document.getElementById('landBtn');
+
+            armBtn.textContent = data.armed ? 'DISARM' : 'ARM';
+            takeoffBtn.disabled = !data.armed || data.flying;
+            landBtn.disabled = !data.flying;
+
+            // Log flight events
+            if (data.armed && !window.lastArmedState) {
+                logMessage('info', 'Drone armed');
+                updateUserStat('flights_completed', 1);
+            }
+            if (data.flying && !window.lastFlyingState) {
+                logMessage('info', 'Takeoff successful');
+            }
+            if (!data.flying && window.lastFlyingState) {
+                logMessage('info', 'Landing completed');
+            }
+
+            window.lastArmedState = data.armed;
+            window.lastFlyingState = data.flying;
+        }
+
+        function updateTelemetryDisplay(data) {
+            document.getElementById('temperature').textContent = `${data.temperature || 0}°C`;
+            document.getElementById('pressure').textContent = `${data.pressure || 0} hPa`;
+            document.getElementById('humidity').textContent = `${data.humidity || 0}%`;
+            document.getElementById('gpsSats').textContent = data.gps_satellites || 0;
+        }
+
+        function updateMissionStatus(data) {
+            const container = document.getElementById('missionStatus');
+            
+            if (!data || !data.active) {
+                container.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 2rem;">No active missions</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="status-item">
+                    <span class="status-icon">🎯</span>
+                    <span class="status-label">Mission</span>
+                    <span class="status-value">${data.name}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">📍</span>
+                    <span class="status-label">Progress</span>
+                    <span class="status-value">${data.progress || 0}%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">📊</span>
+                    <span class="status-label">Objects</span>
+                    <span class="status-value">${data.objects_detected || 0}</span>
+                </div>
+            `;
+        }
+
+        async function updateUserStat(stat, value) {
+            try {
+                userStats[stat] = (userStats[stat] || 0) + value;
+                
+                const response = await fetch(`/api/celebrations/user/${currentUser}/stats`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({[stat]: value})
+                });
+                
+                const data = await response.json();
+                if (data.success && data.new_achievements.length > 0) {
+                    // Show achievement badge
+                    const badge = document.getElementById('achievementBadge');
+                    badge.textContent = data.new_achievements.length;
+                    badge.style.display = 'block';
+                    
+                    // Show celebrations
+                    data.new_achievements.forEach(achievement => {
+                        setTimeout(() => showCelebration(achievement), 500);
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating user stats:', error);
+            }
+        }
+
+        function showCelebration(achievement) {
+            const overlay = document.getElementById('celebrationOverlay');
+            const icon = document.getElementById('celebrationIcon');
+            const title = document.getElementById('celebrationTitle');
+            const description = document.getElementById('celebrationDescription');
+
+            icon.textContent = achievement.icon || '🏆';
+            title.textContent = achievement.name || 'Achievement Unlocked!';
+            description.textContent = achievement.description || 'You\'ve earned a new achievement!';
+
+            overlay.style.display = 'flex';
+            
+            // Auto-close after 5 seconds
+            setTimeout(() => {
+                closeCelebration();
+            }, 5000);
+
+            logMessage('info', `🎉 Achievement unlocked: ${achievement.name}`);
+        }
+
+        function closeCelebration() {
+            document.getElementById('celebrationOverlay').style.display = 'none';
+            
+            // Reload user progress
+            loadUserProgress();
+        }
+
+        function logMessage(type, message) {
+            const logsContainer = document.getElementById('systemLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="log-timestamp">${timestamp}</span>${message}`;
+            
+            logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+            
+            // Keep only last 50 logs
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.lastChild);
+            }
+        }
+
+        function setupEventListeners() {
+            // Control buttons
+            document.getElementById('armBtn').onclick = () => executeCommand('arm');
+            document.getElementById('takeoffBtn').onclick = () => executeCommand('takeoff');
+            document.getElementById('landBtn').onclick = () => executeCommand('land');
+            document.getElementById('emergencyBtn').onclick = () => executeCommand('emergency');
+            
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    const section = link.getAttribute('data-section');
+                    console.log('Switching to section:', section); // Debug log
+                    switchPage(section);
+                    
+                    document.querySelector('.nav-link.active').classList.remove('active');
+                    link.classList.add('active');
+                };
+            });
+
+            // Filter change handlers
+            const achievementFilter = document.getElementById('achievementFilter');
+            const tierFilter = document.getElementById('tierFilter');
+            const detailedLogFilter = document.getElementById('detailedLogFilter');
+            
+            if (achievementFilter) achievementFilter.onchange = loadAchievementsPage;
+            if (tierFilter) tierFilter.onchange = loadAchievementsPage;
+            if (detailedLogFilter) detailedLogFilter.onchange = loadDetailedLogs;
+        }
+
+        function switchPage(page) {
+            console.log('Switching to page:', page); // Debug log
+            
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(page + 'Page');
+            if (targetPage) {
+                targetPage.classList.add('active');
+                console.log('Page switched successfully to:', page);
+            } else {
+                console.error('Page not found:', page + 'Page');
+                // Fallback to dashboard
+                document.getElementById('dashboardPage').classList.add('active');
+            }
+            
+            // Load page-specific data
+            try {
+                switch(page) {
+                    case 'missions':
+                        loadMissionsPage();
+                        break;
+                    case 'achievements':
+                        loadAchievementsPage();
+                        break;
+                    case 'logs':
+                        loadDetailedLogs();
+                        break;
+                    case 'mobile':
+                        loadMobilePage();
+                        break;
+                    case 'dashboard':
+                    default:
+                        // Dashboard is always loaded, no special action needed
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading page data:', error);
+            }
+        }
+
+        async function loadMissionsPage() {
+            try {
+                console.log('Loading missions page...'); // Debug log
+                const response = await fetch('/api/missions/list');
+                const data = await response.json();
+                
+                const container = document.getElementById('missionTimeline');
+                if (!container) {
+                    console.error('Mission timeline container not found');
+                    return;
+                }
+                
+                if (!data.success || !data.missions || data.missions.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 3rem;">No missions available. Create your first mission!</div>';
+                    return;
+                }
+
+                container.innerHTML = data.missions.map(mission => `
+                    <div class="mission-item">
+                        <div class="status-icon">🎯</div>
+                        <div style="flex: 1;">
+                            <h4>${mission.name}</h4>
+                            <p style="opacity: 0.7; margin: 0.5rem 0;">${mission.description}</p>
+                            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+                                <span class="mission-status ${mission.status}">${mission.status}</span>
+                                <span>📍 ${mission.waypoints?.length || 0} waypoints</span>
+                                <span>⏱️ ${mission.estimated_duration || '--'} min</span>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="control-btn" onclick="startMission('${mission.id}')">
+                                ${mission.status === 'active' ? 'Stop' : 'Start'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading missions:', error);
+                const container = document.getElementById('missionTimeline');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; color: #ff4757; padding: 3rem;">❌ Error loading missions</div>';
+                }
+            }
+        }
+
+        async function loadAchievementsPage() {
+            try {
+                console.log('Loading achievements page...'); // Debug log
+                
+                const achievementFilter = document.getElementById('achievementFilter');
+                const tierFilter = document.getElementById('tierFilter');
+                
+                const typeFilter = achievementFilter ? achievementFilter.value : '';
+                const tierFilterValue = tierFilter ? tierFilter.value : '';
+                
+                let url = '/api/celebrations/achievements';
+                const params = [];
+                if (typeFilter) params.push(`type=${typeFilter}`);
+                if (tierFilterValue) params.push(`tier=${tierFilterValue}`);
+                if (params.length > 0) url += '?' + params.join('&');
+
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const container = document.getElementById('achievementGrid');
+                if (!container) {
+                    console.error('Achievement grid container not found');
+                    return;
+                }
+                
+                if (!data.success) {
+                    console.error('Failed to load achievements:', data.error);
+                    container.innerHTML = '<div style="text-align: center; color: #ff4757; padding: 3rem; grid-column: 1 / -1;">❌ Error loading achievements</div>';
+                    return;
+                }
+
+                if (!data.achievements || data.achievements.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 3rem; grid-column: 1 / -1;">No achievements match the current filters</div>';
+                    return;
+                }
+
+                container.innerHTML = data.achievements.map(achievement => `
+                    <div class="achievement-card tier-${achievement.tier} ${achievement.earned ? 'earned' : 'locked'}">
+                        <div class="achievement-icon" style="font-size: 3rem; margin-bottom: 1rem;">
+                            ${achievement.icon}
+                        </div>
+                        <h4 style="margin-bottom: 0.5rem;">${achievement.name}</h4>
+                        <p style="opacity: 0.8; margin-bottom: 1rem; font-size: 0.9rem;">
+                            ${achievement.description}
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="achievement-points">${achievement.reward_points} pts</span>
+                            <span style="text-transform: capitalize; opacity: 0.7;">
+                                ${achievement.tier} • ${achievement.type}
+                            </span>
+                        </div>
+                        ${achievement.earned ? '<div style="color: #00ff88; margin-top: 0.5rem;">✅ Unlocked</div>' : ''}
+                    </div>
+                `).join('');
+                
+                console.log('Achievements loaded successfully:', data.achievements.length);
+            } catch (error) {
+                console.error('Error loading achievements:', error);
+                const container = document.getElementById('achievementGrid');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; color: #ff4757; padding: 3rem; grid-column: 1 / -1;">❌ Error loading achievements</div>';
+                }
+            }
+        }
+
+        async function loadDetailedLogs() {
+            try {
+                const filter = document.getElementById('detailedLogFilter').value;
+                const url = filter ? `/api/logs/system?type=${filter}&limit=100` : '/api/logs/system?limit=100';
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const container = document.getElementById('detailedLogs');
+                if (!data.success || data.logs.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; opacity: 0.5; padding: 3rem;">No logs available</div>';
+                    return;
+                }
+
+                container.innerHTML = data.logs.map(log => {
+                    const timestamp = new Date(log.timestamp).toLocaleString();
+                    return `<div class="log-entry ${log.log_type}">
+                        <span class="log-timestamp">${timestamp}</span>
+                        <strong>[${log.log_type.toUpperCase()}]</strong> ${log.message}
+                        ${log.data ? `<br><small style="opacity: 0.7;">${JSON.stringify(log.data)}</small>` : ''}
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading detailed logs:', error);
+            }
+        }
+
+        async function loadMobilePage() {
+            try {
+                const response = await fetch('/api/mobile/status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const container = document.getElementById('mobileStatusData');
+                    const status = data.status;
+                    
+                    container.innerHTML = `
+                        <div class="status-item">
+                            <span class="status-icon">🔋</span>
+                            <span class="status-label">Battery</span>
+                            <span class="status-value">${status.basic?.battery || 0}%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">📡</span>
+                            <span class="status-label">Signal</span>
+                            <span class="status-value">${status.basic?.signal || 0}%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">📏</span>
+                            <span class="status-label">Altitude</span>
+                            <span class="status-value">${status.basic?.altitude || 0}m</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-icon">📱</span>
+                            <span class="status-label">Mobile Ready</span>
+                            <span class="status-value">✅ Yes</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('mobileConnectionStatus').textContent = '📱 Mobile compatible - Ready for app connection';
+                }
+            } catch (error) {
+                console.error('Error loading mobile status:', error);
+                document.getElementById('mobileConnectionStatus').textContent = '📱 Mobile status unavailable';
+            }
+        }
+
+        // GPS and Maps functionality
+        function updateLocation() {
+            fetch('/api/drone/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const location = data.status.location || {};
+                        const lat = location.lat || 0;
+                        const lng = location.lng || 0;
+                        const alt = data.status.altitude || 0;
+                        
+                        document.getElementById('currentLat').textContent = lat.toFixed(6);
+                        document.getElementById('currentLng').textContent = lng.toFixed(6);
+                        document.getElementById('currentAlt').textContent = alt;
+                        
+                        if (lat && lng) {
+                            initializeMap(lat, lng);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error updating location:', error));
+        }
+
+        function initializeMap(lat, lng) {
+            const mapContainer = document.getElementById('map');
+            
+            // Using OpenStreetMap with Leaflet-style embed
+            mapContainer.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%;">
+                    <iframe 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}"
+                        style="width: 100%; height: 100%; border: none;"
+                        allowfullscreen>
+                    </iframe>
+                    <div class="drone-marker">🚁</div>
+                </div>
+            `;
+        }
+
+        // Mission management functions
+        function createNewMission() {
+            const missionName = prompt('Enter mission name:');
+            if (!missionName) return;
+            
+            const missionData = {
+                name: missionName,
+                description: 'Custom surveillance mission',
+                type: 'surveillance',
+                waypoints: [],
+                settings: {
+                    altitude: 50,
+                    speed: 5,
+                    camera_angle: -90
+                }
+            };
+            
+            fetch('/api/missions/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(missionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    logMessage('info', `Mission created: ${missionName}`);
+                    loadMissionsPage();
+                } else {
+                    logMessage('error', `Failed to create mission: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating mission:', error);
+                logMessage('error', 'Error creating mission');
+            });
+        }
+
+        function startMission(missionId) {
+            fetch(`/api/missions/${missionId}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    logMessage('info', `Mission started: ${missionId}`);
+                    loadMissionsPage();
+                } else {
+                    logMessage('error', `Failed to start mission: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error starting mission:', error);
+            });
+        }
+
+        // Utility functions
+        function exportLogs() {
+            const filter = document.getElementById('detailedLogFilter').value;
+            const url = filter ? `/api/logs/export?type=${filter}` : '/api/logs/export';
+            
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `drone_logs_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error exporting logs:', error));
+        }
+
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+                fetch('/api/logs/clear', { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadDetailedLogs();
+                            logMessage('info', 'Logs cleared successfully');
+                        }
+                    })
+                    .catch(error => console.error('Error clearing logs:', error));
+            }
+        }
+
+        function toggleNotifications() {
+            logMessage('info', 'Push notifications feature coming soon');
+        }
+
+        function toggleOfflineMode() {
+            logMessage('info', 'Offline mode configuration coming soon');
+        }
+
+        function optimizeForMobile() {
+            logMessage('info', 'Mobile layout optimization applied');
+        }
+
+        async function executeCommand(command) {
+            try {
+                console.log('Executing command:', command); // Debug log
+                
+                let endpoint = '';
+                let method = 'POST';
+                let body = {};
+                
+                // Map commands to correct API endpoints with required data
+                switch(command) {
+                    case 'arm':
+                        endpoint = '/api/drone/arm';
+                        break;
+                    case 'takeoff':
+                        endpoint = '/api/drone/takeoff';
+                        body = { altitude: 10 }; // Default altitude
+                        break;
+                    case 'land':
+                        endpoint = '/api/drone/land';
+                        break;
+                    case 'emergency':
+                        endpoint = '/api/drone/emergency-stop';
+                        break;
+                    default:
+                        endpoint = `/api/drone/${command}`;
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                console.log('Command response:', data); // Debug log
+                
+                if (data.success) {
+                    logMessage('info', `✅ Command executed: ${command} - ${data.message || 'Success'}`);
+                    
+                    // Update button states immediately for better UX
+                    updateButtonStates(command, true);
+                    
+                    // Refresh drone status after command
+                    setTimeout(updateDroneStatusFromAPI, 1000);
+                    
+                } else {
+                    logMessage('error', `❌ Command failed: ${command} - ${data.error || data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Command execution error:', error);
+                logMessage('error', `❌ Command error: ${command} - ${error.message}`);
+            }
+        }
+
+        function updateButtonStates(command, success) {
+            const armBtn = document.getElementById('armBtn');
+            const takeoffBtn = document.getElementById('takeoffBtn');
+            const landBtn = document.getElementById('landBtn');
+            
+            if (success && command === 'arm') {
+                if (armBtn.textContent === 'ARM') {
+                    armBtn.textContent = 'DISARM';
+                    takeoffBtn.disabled = false;
+                } else {
+                    armBtn.textContent = 'ARM';
+                    takeoffBtn.disabled = true;
+                    landBtn.disabled = true;
+                }
+            } else if (success && command === 'takeoff') {
+                takeoffBtn.disabled = true;
+                landBtn.disabled = false;
+            } else if (success && command === 'land') {
+                takeoffBtn.disabled = false;
+                landBtn.disabled = true;
+            }
+        }
+
+        // Helper function to update drone status
+        async function updateDroneStatusFromAPI() {
+            try {
+                const response = await fetch('/api/drone/status');
+                const data = await response.json();
+                if (data.success) {
+                    updateDroneStatus(data.status);
+                }
+            } catch (error) {
+                console.error('Error updating drone status:', error);
+            }
+        }
+
+        async function loadSystemLogs() {
+            try {
+                const filter = document.getElementById('logFilter').value;
+                const url = filter ? `/api/logs/system?type=${filter}&limit=20` : '/api/logs/system?limit=20';
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const logsContainer = document.getElementById('systemLogs');
+                    logsContainer.innerHTML = data.logs.map(log => {
+                        const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                        return `<div class="log-entry ${log.log_type}">
+                            <span class="log-timestamp">${timestamp}</span>
+                            ${log.message}
+                        </div>`;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading system logs:', error);
+            }
+        }
+
+        function startDataUpdates() {
+            // Update data every 5 seconds
+            setInterval(async () => {
+                try {
+                    // Update drone status
+                    const statusResponse = await fetch('/api/drone/status');
+                    const statusData = await statusResponse.json();
+                    if (statusData.success) {
+                        updateDroneStatus(statusData.status);
+                        
+                        // Update GPS location if available
+                        const location = statusData.status.location;
+                        if (location && location.lat && location.lng) {
+                            document.getElementById('currentLat').textContent = location.lat.toFixed(6);
+                            document.getElementById('currentLng').textContent = location.lng.toFixed(6);
+                        }
+                    }
+
+                    // Update telemetry
+                    const telemetryResponse = await fetch('/api/telemetry/current');
+                    const telemetryData = await telemetryResponse.json();
+                    if (telemetryData.success) {
+                        updateTelemetryDisplay(telemetryData.telemetry);
+                    }
+
+                    // Load system logs periodically
+                    if (Math.random() < 0.3) { // 30% chance each update
+                        loadSystemLogs();
+                    }
+                } catch (error) {
+                    console.error('Error updating data:', error);
+                }
+            }, 5000);
+
+            // Initial GPS location update
+            setTimeout(updateLocation, 2000);
+        }
+
+        // Log filter change
+        document.getElementById('logFilter').onchange = loadSystemLogs;
+
+        // Initialize logs on load
+        setTimeout(loadSystemLogs, 1000);
+    </script>
+</body>
+</html>

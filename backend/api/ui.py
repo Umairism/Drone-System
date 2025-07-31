@@ -41,6 +41,34 @@ def dashboard():
     """Alternative route for the dashboard."""
     return index()
 
+@ui_bp.route('/advanced-dashboard.html')
+def advanced_dashboard():
+    """Serve the advanced drone control dashboard."""
+    dashboard_path = os.path.join(os.path.dirname(__file__), '../advanced-dashboard.html')
+    
+    try:
+        with open(dashboard_path, 'r', encoding='utf-8') as f:
+            dashboard_html = f.read()
+        return dashboard_html
+    except FileNotFoundError:
+        return render_template_string("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Advanced Drone Dashboard - Not Found</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #1a1a2e; color: white; }
+                .error { color: #ff6b6b; }
+            </style>
+        </head>
+        <body>
+            <h1>🚁 Advanced Surveillance Drone Dashboard</h1>
+            <p class="error">Advanced dashboard file not found.</p>
+            <p><a href="/" style="color: #74c0fc;">← Go to Basic Dashboard</a></p>
+        </body>
+        </html>
+        """)
+
 @ui_bp.route('/health')
 def health():
     """Simple health check page."""

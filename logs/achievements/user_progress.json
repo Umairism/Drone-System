@@ -1,0 +1,23 @@
+{
+  "pilot_001": {
+    "user_id": "pilot_001",
+    "total_points": 0,
+    "achievements_earned": [],
+    "current_progress": {},
+    "statistics": {
+      "flights_completed": 0,
+      "missions_completed": 0,
+      "objects_detected": 0,
+      "total_flight_time": 0,
+      "safe_flights": 0,
+      "mission_success_rate": 1.0,
+      "detection_accuracy": 0.0,
+      "avg_system_performance": 0.0,
+      "night_missions": 0,
+      "incident_free_days": 0,
+      "last_activity": "2025-07-31T07:44:19.369563+00:00"
+    },
+    "level": 1,
+    "experience": 0
+  }
+}

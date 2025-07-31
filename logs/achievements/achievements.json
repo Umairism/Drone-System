@@ -1,0 +1,192 @@
+{
+  "first_flight": {
+    "id": "first_flight",
+    "name": "First Flight",
+    "description": "Complete your first successful drone flight",
+    "type": "AchievementType.FLIGHT",
+    "tier": "AchievementTier.BRONZE",
+    "criteria": {
+      "flights_completed": 1
+    },
+    "reward_points": 50,
+    "icon": "\ud83d\ude81",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "flight_veteran": {
+    "id": "flight_veteran",
+    "name": "Flight Veteran",
+    "description": "Complete 50 successful flights",
+    "type": "AchievementType.FLIGHT",
+    "tier": "AchievementTier.SILVER",
+    "criteria": {
+      "flights_completed": 50
+    },
+    "reward_points": 200,
+    "icon": "\u2708\ufe0f",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "sky_master": {
+    "id": "sky_master",
+    "name": "Sky Master",
+    "description": "Complete 200 flights and accumulate 50+ hours of flight time",
+    "type": "AchievementType.FLIGHT",
+    "tier": "AchievementTier.GOLD",
+    "criteria": {
+      "flights_completed": 200,
+      "total_flight_time": 180000
+    },
+    "reward_points": 500,
+    "icon": "\ud83c\udfc6",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "mission_rookie": {
+    "id": "mission_rookie",
+    "name": "Mission Rookie",
+    "description": "Successfully complete your first surveillance mission",
+    "type": "AchievementType.MISSION",
+    "tier": "AchievementTier.BRONZE",
+    "criteria": {
+      "missions_completed": 1
+    },
+    "reward_points": 75,
+    "icon": "\ud83c\udfaf",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "mission_commander": {
+    "id": "mission_commander",
+    "name": "Mission Commander",
+    "description": "Complete 25 surveillance missions with 95%+ success rate",
+    "type": "AchievementType.MISSION",
+    "tier": "AchievementTier.GOLD",
+    "criteria": {
+      "missions_completed": 25,
+      "mission_success_rate": 0.95
+    },
+    "reward_points": 400,
+    "icon": "\ud83c\udf96\ufe0f",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "eagle_eye": {
+    "id": "eagle_eye",
+    "name": "Eagle Eye",
+    "description": "Successfully detect 100 objects during flights",
+    "type": "AchievementType.DETECTION",
+    "tier": "AchievementTier.SILVER",
+    "criteria": {
+      "objects_detected": 100
+    },
+    "reward_points": 150,
+    "icon": "\ud83d\udc41\ufe0f",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "surveillance_expert": {
+    "id": "surveillance_expert",
+    "name": "Surveillance Expert",
+    "description": "Detect 1000 objects with 90%+ accuracy",
+    "type": "AchievementType.DETECTION",
+    "tier": "AchievementTier.PLATINUM",
+    "criteria": {
+      "objects_detected": 1000,
+      "detection_accuracy": 0.9
+    },
+    "reward_points": 750,
+    "icon": "\ud83d\udd0d",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "safety_first": {
+    "id": "safety_first",
+    "name": "Safety First",
+    "description": "Complete 10 flights without any safety incidents",
+    "type": "AchievementType.SAFETY",
+    "tier": "AchievementTier.BRONZE",
+    "criteria": {
+      "safe_flights": 10
+    },
+    "reward_points": 100,
+    "icon": "\ud83d\udee1\ufe0f",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "incident_free": {
+    "id": "incident_free",
+    "name": "Incident Free",
+    "description": "Operate for 30 days without safety incidents",
+    "type": "AchievementType.SAFETY",
+    "tier": "AchievementTier.GOLD",
+    "criteria": {
+      "incident_free_days": 30
+    },
+    "reward_points": 300,
+    "icon": "\u26a1",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "system_optimizer": {
+    "id": "system_optimizer",
+    "name": "System Optimizer",
+    "description": "Achieve average system performance above 95%",
+    "type": "AchievementType.PERFORMANCE",
+    "tier": "AchievementTier.SILVER",
+    "criteria": {
+      "avg_system_performance": 0.95
+    },
+    "reward_points": 200,
+    "icon": "\u2699\ufe0f",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "night_owl": {
+    "id": "night_owl",
+    "name": "Night Owl",
+    "description": "Complete 10 successful night missions",
+    "type": "AchievementType.MISSION",
+    "tier": "AchievementTier.SILVER",
+    "criteria": {
+      "night_missions": 10
+    },
+    "reward_points": 250,
+    "icon": "\ud83c\udf19",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "drone_operator": {
+    "id": "drone_operator",
+    "name": "Certified Drone Operator",
+    "description": "Reach level 10 and earn 1000 points",
+    "type": "AchievementType.MILESTONE",
+    "tier": "AchievementTier.GOLD",
+    "criteria": {
+      "level": 10,
+      "total_points": 1000
+    },
+    "reward_points": 500,
+    "icon": "\ud83c\udf93",
+    "hidden": false,
+    "prerequisites": []
+  },
+  "legendary_pilot": {
+    "id": "legendary_pilot",
+    "name": "Legendary Pilot",
+    "description": "The ultimate drone operator - master of all aspects",
+    "type": "AchievementType.MILESTONE",
+    "tier": "AchievementTier.LEGENDARY",
+    "criteria": {
+      "level": 25,
+      "total_points": 5000,
+      "flights_completed": 500,
+      "missions_completed": 100,
+      "objects_detected": 5000
+    },
+    "reward_points": 2000,
+    "icon": "\ud83d\udc51",
+    "hidden": true,
+    "prerequisites": []
+  }
+}
