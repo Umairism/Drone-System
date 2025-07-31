@@ -1,0 +1,29 @@
+drone:
+  name: "SurvDrone-001"
+  type: "quadcopter"
+  max_altitude: 120  # meters
+  max_speed: 15      # m/s
+  battery_capacity: 5000  # mAh
+  
+flight_controller:
+  type: "pixhawk4"
+  firmware: "arducopter"
+  failsafe_enabled: true
+  return_to_home: true
+  
+sensors:
+  gps:
+    enabled: true
+    update_rate: 10  # Hz
+  camera:
+    enabled: true
+    resolution: [1920, 1080]
+    fps: 30
+  ultrasonic:
+    enabled: true
+    max_range: 400  # cm
+    
+geofence:
+  enabled: true
+  radius: 1000  # meters
+  max_altitude: 120  # meters

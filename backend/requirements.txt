@@ -1,0 +1,95 @@
+# Flask Backend Dependencies
+# Core Flask packages
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+
+# Web server
+gunicorn==21.2.0
+eventlet==0.33.3
+
+# HTTP client for API calls
+requests==2.31.0
+
+# JSON Web Tokens for authentication
+PyJWT==2.8.0
+
+# Date and time utilities
+python-dateutil==2.8.2
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# Validation and serialization
+marshmallow==3.20.1
+
+# Database (if using SQLAlchemy)
+SQLAlchemy==2.0.21
+Flask-SQLAlchemy==3.0.5
+
+# Database migrations
+Flask-Migrate==4.0.5
+
+# Password hashing
+bcrypt==4.0.1
+Flask-Bcrypt==1.0.1
+
+# Redis for caching and session storage
+redis==5.0.1
+Flask-Session==0.5.0
+
+# WebSocket support
+python-socketio==5.8.0
+
+# Async support
+gevent==23.9.1
+
+# Development and testing
+pytest==7.4.2
+pytest-flask==1.2.0
+coverage==7.3.2
+
+# Code formatting and linting
+black==23.9.1
+flake8==6.1.0
+isort==5.12.0
+
+# Logging
+colorlog==6.7.0
+
+# Configuration management
+pydantic==2.4.2
+pydantic-settings==2.0.3
+
+# File handling
+Pillow==10.0.1
+
+# Math and scientific computing
+numpy==1.24.3
+
+# HTTP parsing
+Werkzeug==2.3.7
+
+# CORS handling
+flask-cors==4.0.0
+
+# Rate limiting
+Flask-Limiter==3.5.0
+
+# Health checks
+Flask-HealthCheck==1.0.0
+
+# API documentation
+flask-restx==1.2.0
+flask-apispec==0.11.4
+
+# Background tasks
+celery==5.3.2
+redis==5.0.1
+
+# Monitoring
+prometheus-client==0.17.1
+psutil==5.9.6
+
+# Security
+cryptography==41.0.4
